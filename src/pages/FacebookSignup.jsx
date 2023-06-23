@@ -11,19 +11,23 @@ import {
   MenuItem,
 } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
 const schema = z.object({
-  firstName: z.string().min(8, { message: "Minimum 8 characters required" }),
+  name: z
+    .string()
+    .nonempty({
+      message: "First name cannot be blank",
+    })
+    .min(8, { message: "Minimum 8 characters required" }),
 });
 
 const FacebookSignup = () => {
   const {
     register,
-    control,
     handleSubmit,
     formState: { errors },
   } = useForm({ resolver: zodResolver(schema) });
@@ -108,38 +112,20 @@ const FacebookSignup = () => {
                 p: 2,
               }}
               component="form"
+              noValidate
               onSubmit={handleSubmit(onSubmit)}
             >
               {/*This is the form*/}
               <Grid container spacing={1.5}>
                 <Grid item xs={6}>
-                  {/* <Controller
-                    control={control}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <TextField
-                        placeholder="First name"
-                        // onBlur={onBlur}
-                        // onChange={onChange}
-                        value={value}
-                        size="small"
-                      />
-                    )}
-                    name="firstName"
-                  />
-                  {errors.firstName && (
-                    <Typography variant="subtitle2">
-                      This is required.
-                    </Typography>
-                  )} */}
                   <TextField
                     fullWidth
                     size="small"
                     placeholder="First name"
-                    {...register("firstName")}
+                    error={!!errors["name"]}
+                    helperText={errors["name"] ? errors["name"].message : ""}
+                    {...register("name")}
                   />
-                  {errors.firstName?.message && (
-                    <p>{errors.firstName?.message}</p>
-                  )}
                 </Grid>
                 <Grid item xs={6}>
                   <TextField fullWidth size="small" placeholder="Surname" />
@@ -267,6 +253,7 @@ const FacebookSignup = () => {
                 }}
               >
                 <Button
+                  type="submit"
                   variant="contained"
                   color="secondary"
                   sx={{ width: "12rem", mb: 2 }}
