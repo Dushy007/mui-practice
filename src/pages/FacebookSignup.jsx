@@ -9,6 +9,8 @@ import {
   Paper,
   Link,
   MenuItem,
+  FormControl,
+  FormHelperText,
 } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
 import React, { useEffect } from "react";
@@ -17,20 +19,31 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
 const schema = z.object({
-  name: z
+  firstName: z
     .string()
     .nonempty({
       message: "First name cannot be blank",
     })
-    .min(8, { message: "Minimum 8 characters required" }),
+    .min(8, { message: "Minimum 8 characters required" })
+    .refine((value) => {
+      return value?.[0] === value[0]?.toUpperCase();
+    }, "Should start with uppercase")
+    .refine((value) => {
+      return /[a-z]/.test(value);
+    }, "Should have lowercase letters")
+    .refine((value) => {
+      return /[^a-zA-Z0-9s]/g.test(value);
+    }, "SHould contain atleast 1 special character"),
 });
-
 const FacebookSignup = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({ resolver: zodResolver(schema) });
+  const { handleSubmit, control } = useForm({
+    mode: "onBlur",
+    reValidateMode: "onBlur",
+    resolver: zodResolver(schema),
+    defaultValues: {
+      firstName: "",
+    },
+  });
 
   const days = [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
@@ -118,14 +131,34 @@ const FacebookSignup = () => {
               {/*This is the form*/}
               <Grid container spacing={1.5}>
                 <Grid item xs={6}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    placeholder="First name"
-                    error={!!errors["name"]}
-                    helperText={errors["name"] ? errors["name"].message : ""}
-                    {...register("name")}
-                  />
+                  <Controller
+                    name="firstName"
+                    control={control}
+                    render={({
+                      field: { value, onChange, onBlur, ref },
+                      fieldState: { error },
+                    }) => {
+                      console.log("error", error);
+                      return (
+                        <FormControl>
+                          <TextField
+                            name="firstName"
+                            fullWidth
+                            value={value}
+                            onChange={onChange}
+                            onBlur={onBlur}
+                            inputRef={ref}
+                            error={Boolean(error)}
+                            size="small"
+                            placeholder="First name"
+                          />
+                          <FormHelperText sx={{ color: "error.main" }}>
+                            {error?.message ?? ""}
+                          </FormHelperText>
+                        </FormControl>
+                      );
+                    }}
+                  ></Controller>
                 </Grid>
                 <Grid item xs={6}>
                   <TextField fullWidth size="small" placeholder="Surname" />
